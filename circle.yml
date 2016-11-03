@@ -1,0 +1,18 @@
+machine:
+  environment:
+    CI_BUILD_NUMBER: "${CIRCLE_BUILD_NUM}"
+
+dependencies:
+  override:
+    - ./gradlew resolveDependencies --console=plain
+
+test:
+  override:
+    - ./gradlew build --console=plain
+
+
+deployment:
+  prod:
+    branch: master
+    commands:
+      - ./gradlew  uploadArchives -x check --console=plain

@@ -1,0 +1,139 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'signing'
+    id 'net.researchgate.release' version '2.4.1'
+    id 'com.github.ben-manes.versions' version '0.13.0'
+}
+
+ext {
+    dropwizardVersion = '1.0.3'
+    junitVersion = '4.12'
+    logbackLogglyVersion = '0.1.4'
+    logbackExtrasVersion = '0.1.5'
+    logbackVersion = '1.1.7'
+}
+
+group = 'co.wrisk.dropwizard'
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
+
+compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.deprecation = true
+}
+
+compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.deprecation = true
+}
+dependencies {
+    compileOnly "io.dropwizard:dropwizard-logging:$dropwizardVersion"
+    compileOnly "io.dropwizard:dropwizard-request-logging:$dropwizardVersion"
+    compile ("org.logback-extensions:logback-ext-loggly:$logbackLogglyVersion") {
+        exclude group: "ch.qos.logback"
+    }
+    compile ("ch.qos.logback.contrib:logback-json-classic:$logbackExtrasVersion") {
+        exclude group: "ch.qos.logback"
+    }
+    compile ("ch.qos.logback.contrib:logback-jackson:$logbackExtrasVersion") {
+        exclude group: "ch.qos.logback"
+    }
+    compile ("net.logstash.logback:logstash-logback-encoder:4.7") {
+        exclude group: "com.fasterxml.jackson.core"
+        exclude group: "ch.qos.logback"
+    }
+    testCompile "junit:junit:${junitVersion}"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    required { !version.contains("SNAPSHOT") }
+    sign configurations.archives
+}
+
+task resolveDependencies {
+    doLast {
+        project.rootProject.allprojects.each { subProject ->
+            subProject.buildscript.configurations.each { configuration ->
+                configuration.resolve()
+            }
+            subProject.configurations.each { configuration ->
+                configuration.resolve()
+            }
+        }
+    }
+}
+
+afterReleaseBuild.dependsOn uploadArchives
+
+uploadArchives {
+
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Dropwizard component to enable loggly log appender'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Dropwizard component to enable loggly log appender'
+                url 'https://github.com/WriskHQ/dropwizard-logging-loggly'
+
+                scm {
+                    connection 'scm:git:git@github.com:WriskHQ/dropwizard-logging-loggly.git'
+                    developerConnection 'scm:git:git@github.com:WriskHQ/dropwizard-logging-loggly.git'
+                    url 'https://github.com/WriskHQ/dropwizard-logging-loggly'
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License (MIT)'
+                        url 'https://raw.githubusercontent.com/WriskHQ/dropwizard-logging-loggly/master/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'aharin'
+                        name 'Alex Harin'
+                        email 'alex@wrisk.co'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
