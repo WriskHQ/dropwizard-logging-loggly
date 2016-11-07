@@ -83,7 +83,7 @@ public class LogglyAppenderFactory extends AbstractAppenderFactory<ILoggingEvent
     private String tag;
 
     @JsonProperty
-    protected Map<String, String> customFields;
+    private Map<String, String> customFields;
 
 
     public HostAndPort getServer() {
