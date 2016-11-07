@@ -16,6 +16,7 @@ import io.dropwizard.logging.layout.LayoutFactory;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 /**
  * <p>An {@link io.dropwizard.logging.AppenderFactory} implementation which provides an appender that writes events to Loggly.</p>
@@ -81,6 +82,10 @@ public class LogglyAppenderFactory extends AbstractAppenderFactory<ILoggingEvent
     @JsonProperty
     private String tag;
 
+    @JsonProperty
+    protected Map<String, String> customFields;
+
+
     public HostAndPort getServer() {
         return server;
     }
@@ -105,8 +110,23 @@ public class LogglyAppenderFactory extends AbstractAppenderFactory<ILoggingEvent
         this.tag = tag;
     }
 
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
+    }
+
     protected JsonLayout buildJsonLayout(LoggerContext context, LayoutFactory<ILoggingEvent> layoutFactory) {
-        JsonLayout formatter = new JsonLayout();
+        JsonLayout formatter = new JsonLayout() {
+            @Override
+            protected void addCustomDataToJsonMap(Map<String, Object> map, ILoggingEvent event) {
+                if (customFields != null) {
+                    map.putAll(customFields);
+                }
+            }
+        };
         formatter.setJsonFormatter(new JacksonJsonFormatter());
         formatter.setAppendLineSeparator(true);
         formatter.setContext(context);
