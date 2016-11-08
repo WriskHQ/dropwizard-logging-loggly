@@ -42,12 +42,6 @@ dependencies {
     compile ("org.logback-extensions:logback-ext-loggly:$logbackLogglyVersion") {
         exclude group: "ch.qos.logback"
     }
-    compile ("ch.qos.logback.contrib:logback-json-classic:$logbackExtrasVersion") {
-        exclude group: "ch.qos.logback"
-    }
-    compile ("ch.qos.logback.contrib:logback-jackson:$logbackExtrasVersion") {
-        exclude group: "ch.qos.logback"
-    }
     compile ("net.logstash.logback:logstash-logback-encoder:4.7") {
         exclude group: "com.fasterxml.jackson.core"
         exclude group: "ch.qos.logback"

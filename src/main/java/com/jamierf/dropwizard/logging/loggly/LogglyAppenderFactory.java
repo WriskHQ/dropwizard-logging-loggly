@@ -2,9 +2,8 @@ package com.jamierf.dropwizard.logging.loggly;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.contrib.jackson.JacksonJsonFormatter;
-import ch.qos.logback.contrib.json.classic.JsonLayout;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.Layout;
 import ch.qos.logback.ext.loggly.LogglyBatchAppender;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -13,10 +12,13 @@ import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
+import net.logstash.logback.layout.LogstashLayout;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 import java.util.Map;
+
+import static com.jamierf.dropwizard.logging.loggly.AppenderFactoryHelper.getCustomFieldsFromMap;
 
 /**
  * <p>An {@link io.dropwizard.logging.AppenderFactory} implementation which provides an appender that writes events to Loggly.</p>
@@ -118,20 +120,17 @@ public class LogglyAppenderFactory extends AbstractAppenderFactory<ILoggingEvent
         this.customFields = customFields;
     }
 
-    protected JsonLayout buildJsonLayout(LoggerContext context, LayoutFactory<ILoggingEvent> layoutFactory) {
-        JsonLayout formatter = new JsonLayout() {
-            @Override
-            protected void addCustomDataToJsonMap(Map<String, Object> map, ILoggingEvent event) {
-                if (customFields != null) {
-                    map.putAll(customFields);
-                }
-            }
-        };
-        formatter.setJsonFormatter(new JacksonJsonFormatter());
-        formatter.setAppendLineSeparator(true);
+    protected Layout<ILoggingEvent> buildJsonLayout(LoggerContext context, LayoutFactory<ILoggingEvent> layoutFactory) {
+        LogstashLayout formatter = new LogstashLayout();
         formatter.setContext(context);
-        formatter.setTimestampFormat(ISO_8601_FORMAT);  //as per https://www.loggly.com/docs/automated-parsing/#json
-        formatter.setTimestampFormatTimezoneId("UTC");
+        if (customFields != null) {
+            formatter.setCustomFields(getCustomFieldsFromMap(customFields));
+        }
+        formatter.start();
+
+//        formatter.setAppendLineSeparator(true);
+//        formatter.setTimestampFormat(ISO_8601_FORMAT);  //as per https://www.loggly.com/docs/automated-parsing/#json
+        formatter.setTimeZone("UTC");
         formatter.start();
         return formatter;
     }

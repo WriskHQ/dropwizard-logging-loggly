@@ -7,8 +7,6 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.ext.loggly.LogglyBatchAppender;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
 import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
@@ -19,6 +17,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 import java.util.Map;
+
+import static com.jamierf.dropwizard.logging.loggly.AppenderFactoryHelper.getCustomFieldsFromMap;
 
 /**
  * <p>An {@link io.dropwizard.logging.AppenderFactory} implementation which provides an appender that writes events to Loggly.</p>
@@ -128,15 +128,6 @@ public class LogglyRequestAppenderFactory extends AbstractAppenderFactory<IAcces
         }
         formatter.start();
         return formatter;
-    }
-
-    public static String getCustomFieldsFromMap(Map<String, String> map) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 
