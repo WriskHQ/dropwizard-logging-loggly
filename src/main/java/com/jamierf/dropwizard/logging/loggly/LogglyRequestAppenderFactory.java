@@ -7,7 +7,10 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.ext.loggly.LogglyBatchAppender;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.filter.FilteringGeneratorDelegate;
+import com.fasterxml.jackson.core.filter.TokenFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
 import io.dropwizard.logging.AbstractAppenderFactory;
@@ -17,7 +20,9 @@ import io.dropwizard.logging.layout.LayoutFactory;
 import net.logstash.logback.composite.GlobalCustomFieldsJsonProvider;
 import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.composite.accessevent.*;
+import net.logstash.logback.decorate.JsonGeneratorDecorator;
 import net.logstash.logback.layout.AccessEventCompositeJsonLayout;
+import net.logstash.logback.layout.LogstashAccessLayout;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -125,77 +130,12 @@ public class LogglyRequestAppenderFactory extends AbstractAppenderFactory<IAcces
     }
 
     protected Layout<IAccessEvent> buildJsonLayout(LoggerContext context, LayoutFactory<IAccessEvent> layoutFactory) {
-        AccessEventCompositeJsonLayout formatter = new AccessEventCompositeJsonLayout();
+        LogstashAccessLayout formatter = new LogstashAccessLayout();
         formatter.setContext(context);
-        JsonProviders<IAccessEvent> rootProviders = new JsonProviders<>();
-        JsonProviders<IAccessEvent> requestProviders = new JsonProviders<>();
-        JsonProviders<IAccessEvent> responseProviders = new JsonProviders<>();
-
-        AccessEventNestedJsonProvider requestProvider = new AccessEventNestedJsonProvider();
-        requestProvider.setFieldName("request");
-        requestProvider.setProviders(requestProviders);
-        rootProviders.addProvider(requestProvider);
-
-        AccessEventNestedJsonProvider responseProvider = new AccessEventNestedJsonProvider();
-        responseProvider.setFieldName("response");
-        responseProvider.setProviders(responseProviders);
-        rootProviders.addProvider(responseProvider);
-
-        AccessEventFormattedTimestampJsonProvider timestampJsonProvider = new AccessEventFormattedTimestampJsonProvider();
-        timestampJsonProvider.setFieldName("timestamp");
-        rootProviders.addProvider(timestampJsonProvider);
-
-        AccessMessageJsonProvider accessMessageJsonProvider = new AccessMessageJsonProvider();
-        accessMessageJsonProvider.setFieldName("message");
-        rootProviders.addProvider(accessMessageJsonProvider);
-
-        ProtocolJsonProvider protocolJsonProvider = new ProtocolJsonProvider();
-        protocolJsonProvider.setFieldName("protocol");
-        rootProviders.addProvider(protocolJsonProvider);
-
-        MethodJsonProvider methodJsonProvider = new MethodJsonProvider();
-        methodJsonProvider.setFieldName("method");
-        requestProviders.addProvider(methodJsonProvider);
-
-        RequestedUrlJsonProvider requestedUrlJsonProvider = new RequestedUrlJsonProvider();
-        requestedUrlJsonProvider.setFieldName("url");
-        requestProviders.addProvider(requestedUrlJsonProvider);
-
-        RemoteHostJsonProvider remoteHostJsonProvider = new RemoteHostJsonProvider();
-        remoteHostJsonProvider.setFieldName("remoteHost");
-        requestProviders.addProvider(remoteHostJsonProvider);
-
-        RemoteUserJsonProvider remoteUserJsonProvider = new RemoteUserJsonProvider();
-        remoteUserJsonProvider.setFieldName("remoteUser");
-        requestProviders.addProvider(remoteUserJsonProvider);
-
-        RequestHeadersJsonProvider requestHeadersJsonProvider = new RequestHeadersJsonProvider();
-        requestHeadersJsonProvider.setFieldName("headers");
-        requestProviders.addProvider(requestHeadersJsonProvider);
-
-        StatusCodeJsonProvider statusCodeJsonProvider = new StatusCodeJsonProvider();
-        statusCodeJsonProvider.setFieldName("status");
-        responseProviders.addProvider(statusCodeJsonProvider);
-
-        ContentLengthJsonProvider contentLengthJsonProvider = new ContentLengthJsonProvider();
-        contentLengthJsonProvider.setFieldName("contentLength");
-        responseProviders.addProvider(contentLengthJsonProvider);
-
-        ElapsedTimeJsonProvider elapsedTimeJsonProvider = new ElapsedTimeJsonProvider();
-        elapsedTimeJsonProvider.setFieldName("responseTime");
-        responseProviders.addProvider(elapsedTimeJsonProvider);
-
-        ResponseHeadersJsonProvider responseHeadersJsonProvider = new ResponseHeadersJsonProvider();
-        responseHeadersJsonProvider.setFieldName("headers");
-        responseProviders.addProvider(responseHeadersJsonProvider);
 
         if (customFields != null) {
-            GlobalCustomFieldsJsonProvider<IAccessEvent> customFieldsJsonProvider = new GlobalCustomFieldsJsonProvider<>();
-            customFieldsJsonProvider.setCustomFields(getCustomFieldsFromMap(customFields));
-            rootProviders.addProvider(customFieldsJsonProvider);
+            formatter.setCustomFields(getCustomFieldsFromMap(customFields));
         }
-
-        formatter.setProviders(rootProviders);
         formatter.start();
         return formatter;
     }
