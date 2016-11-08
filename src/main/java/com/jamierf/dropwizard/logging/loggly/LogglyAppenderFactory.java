@@ -132,6 +132,7 @@ public class LogglyAppenderFactory extends AbstractAppenderFactory<ILoggingEvent
         formatter.setTimeZone("UTC");
         //as per https://www.loggly.com/docs/automated-parsing/#json
         formatter.getProviders().getProviders().stream().filter(p-> p instanceof FormattedTimestampJsonProvider).forEach(x->((FormattedTimestampJsonProvider)x).setPattern(ISO_8601_FORMAT));
+        formatter.getFieldNames().setTimestamp("timestamp");
 
         formatter.start();
         return formatter;
