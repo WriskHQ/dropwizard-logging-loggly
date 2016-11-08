@@ -7,27 +7,17 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.ext.loggly.LogglyBatchAppender;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.filter.FilteringGeneratorDelegate;
-import com.fasterxml.jackson.core.filter.TokenFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
 import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
-import net.logstash.logback.composite.GlobalCustomFieldsJsonProvider;
-import net.logstash.logback.composite.JsonProviders;
-import net.logstash.logback.composite.accessevent.*;
-import net.logstash.logback.decorate.JsonGeneratorDecorator;
-import net.logstash.logback.layout.AccessEventCompositeJsonLayout;
 import net.logstash.logback.layout.LogstashAccessLayout;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Map;
 
 /**
