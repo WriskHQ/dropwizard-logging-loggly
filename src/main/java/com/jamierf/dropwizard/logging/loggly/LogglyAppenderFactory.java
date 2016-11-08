@@ -12,6 +12,7 @@ import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
+import net.logstash.logback.composite.FormattedTimestampJsonProvider;
 import net.logstash.logback.layout.LogstashLayout;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -128,9 +129,10 @@ public class LogglyAppenderFactory extends AbstractAppenderFactory<ILoggingEvent
         }
         formatter.start();
 
-//        formatter.setAppendLineSeparator(true);
-//        formatter.setTimestampFormat(ISO_8601_FORMAT);  //as per https://www.loggly.com/docs/automated-parsing/#json
         formatter.setTimeZone("UTC");
+        //as per https://www.loggly.com/docs/automated-parsing/#json
+        formatter.getProviders().getProviders().stream().filter(p-> p instanceof FormattedTimestampJsonProvider).forEach(x->((FormattedTimestampJsonProvider)x).setPattern(ISO_8601_FORMAT));
+
         formatter.start();
         return formatter;
     }
