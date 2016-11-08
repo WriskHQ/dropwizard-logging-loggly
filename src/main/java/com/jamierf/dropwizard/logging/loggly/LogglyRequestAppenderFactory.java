@@ -7,17 +7,23 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.ext.loggly.LogglyBatchAppender;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.HostAndPort;
 import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
+import net.logstash.logback.composite.GlobalCustomFieldsJsonProvider;
 import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.composite.accessevent.*;
 import net.logstash.logback.layout.AccessEventCompositeJsonLayout;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Map;
 
 /**
  * <p>An {@link io.dropwizard.logging.AppenderFactory} implementation which provides an appender that writes events to Loggly.</p>
@@ -83,6 +89,8 @@ public class LogglyRequestAppenderFactory extends AbstractAppenderFactory<IAcces
     @JsonProperty
     private String tag;
 
+    @JsonProperty
+    private Map<String, String> customFields;
 
     public HostAndPort getServer() {
         return server;
@@ -106,6 +114,14 @@ public class LogglyRequestAppenderFactory extends AbstractAppenderFactory<IAcces
 
     public void setTag(final String tag) {
         this.tag = tag;
+    }
+
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
     }
 
     protected Layout<IAccessEvent> buildJsonLayout(LoggerContext context, LayoutFactory<IAccessEvent> layoutFactory) {
@@ -173,10 +189,26 @@ public class LogglyRequestAppenderFactory extends AbstractAppenderFactory<IAcces
         responseHeadersJsonProvider.setFieldName("headers");
         responseProviders.addProvider(responseHeadersJsonProvider);
 
+        if (customFields != null) {
+            GlobalCustomFieldsJsonProvider<IAccessEvent> customFieldsJsonProvider = new GlobalCustomFieldsJsonProvider<>();
+            customFieldsJsonProvider.setCustomFields(getCustomFieldsFromMap(customFields));
+            rootProviders.addProvider(customFieldsJsonProvider);
+        }
+
         formatter.setProviders(rootProviders);
         formatter.start();
         return formatter;
     }
+
+    public static String getCustomFieldsFromMap(Map<String, String> map) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @Override
     public Appender<IAccessEvent> build(LoggerContext context, String applicationName, LayoutFactory<IAccessEvent> layoutFactory,
