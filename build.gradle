@@ -115,13 +115,6 @@ uploadArchives {
                     }
                 }
 
-                developers {
-                    developer {
-                        id 'aharin'
-                        name 'Alex Harin'
-                        email 'alex@wrisk.co'
-                    }
-                }
             }
         }
     }
